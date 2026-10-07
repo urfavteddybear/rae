@@ -1,0 +1,87 @@
+# Production compose. `docker compose up -d --build`.
+# Lavalink is OPTIONAL: comment out the service and point LAVALINK_HOST
+# at a remote instance — no code change required.
+name: rae
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file: [.env]
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-rae}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-rae}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks: [rae-net]
+    # No ports published — internal only.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-rae}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    restart: unless-stopped
+    env_file: [.env]
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-rae}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-rae}
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [rae-net]
+
+  bot:
+    build:
+      context: .
+      dockerfile: docker/bot.Dockerfile
+    restart: unless-stopped
+    env_file: [.env]
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-rae}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-rae}
+    # Control port NOT published — API reaches it over rae-net only.
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [rae-net]
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+    restart: unless-stopped
+    env_file: [.env]
+    environment:
+      # Server-side API base (internal DNS). Browser never calls this.
+      API_URL: http://api:4000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    networks: [rae-net]
+
+  # Optional local Lavalink. Remove when using a remote instance.
+  # Kept unexposed: only the bot talks to it over rae-net.
+  lavalink:
+    image: ghcr.io/lavalink-devs/lavalink:4
+    restart: unless-stopped
+    env_file: [.env]
+    environment:
+      SERVER_PORT: 2333
+      LAVALINK_SERVER_PASSWORD: ${LAVALINK_PASSWORD:-youshallnotpass}
+    volumes:
+      - ./docker/lavalink/application.yml:/opt/Lavalink/application.yml:ro
+    networks: [rae-net]
+
+networks:
+  rae-net:
+    driver: bridge
+
+volumes:
+  pgdata:

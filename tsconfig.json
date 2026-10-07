@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.base.json",
+  // Solution-style orchestrator: `tsc -b` builds every referenced project
+  // in dependency order. This file lists NO sources of its own — including
+  // them alongside references causes TS6305. Web is excluded — Next
+  // typechecks it during `next build`.
+  "files": [],
+  "references": [
+    { "path": "./packages/shared" },
+    { "path": "./packages/database" },
+    { "path": "./packages/playback" },
+    { "path": "./packages/music" },
+    { "path": "./packages/lyrics" },
+    { "path": "./packages/lavalink" },
+    { "path": "./apps/api" },
+    { "path": "./apps/bot" }
+  ]
+}

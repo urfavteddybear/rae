@@ -1,0 +1,31 @@
+{
+  "name": "rae",
+  "private": true,
+  "version": "0.1.0",
+  "description": "RAE — self-hosted Discord music bot with web control interface",
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "typecheck": "pnpm -r --if-present typecheck",
+    "clean": "find . -name '*.tsbuildinfo' -not -path '*/node_modules/*' -delete; rm -rf packages/*/dist apps/api/dist apps/bot/dist apps/web/.next",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "format": "prettier --check .",
+    "format:fix": "prettier --write .",
+    "build": "pnpm -r --if-present build",
+    "db:generate": "pnpm --filter @rae/database generate",
+    "db:migrate": "pnpm --filter @rae/database migrate"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.14.0",
+    "@types/node": "^22.9.0",
+    "drizzle-kit": "^0.28.1",
+    "eslint": "^9.14.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.13.0",
+    "vitest": "^2.1.5"
+  }
+}
