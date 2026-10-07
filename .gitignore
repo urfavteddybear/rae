@@ -10,3 +10,8 @@ coverage/
 ! .env.example
 *.db
 .DS_Store
+# local harness state, never commit
+.claude/
+# stale compiler output beside drizzle config (early misconfigured build)
+packages/database/drizzle.config.js
+packages/database/drizzle.config.d.ts
